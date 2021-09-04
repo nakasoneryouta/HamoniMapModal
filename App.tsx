@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { Dimensions, StyleSheet, Text, View , TouchableOpacity, Animated, useWindowDimensions} from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Dimensions, StyleSheet, Text, View , TouchableOpacity, Animated, useWindowDimensions, Button} from 'react-native';
+import { GestureEvent, PanGestureHandler, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 
@@ -24,23 +24,14 @@ export default () => {
   const style = useAnimatedStyle(() => {
     return {
       top: withSpring(top.value,SPRING_CONFIG),
+
     };
   });
 
   const gestureHander = useAnimatedGestureHandler({
-    onStart(_, context) {
-      context.startTop = top.value;
+    onActive:(event,context) => {
+      top.value = event.translationY;
     },
-    onActive(event,context) {
-      top.value = context.startTop + event.translationY;
-    },
-    onEnd() {
-      if (top.value > dimentions.height / 2 + 200) {
-        top.value = dimentions.height
-      } else {
-        top.value = dimentions.height / 2
-      }
-    }
   })
 
   const onPress = () => {
@@ -53,21 +44,23 @@ export default () => {
 
 
 
+
   return (
     <View style={styles.container}>
 
-      <TouchableOpacity onPress={() => onPress()}><Text style={{ fontSize: 50 }}>クリック</Text></TouchableOpacity>
-      
+      {/* <TouchableOpacity onPress={() => onPress()}><Text style={{ fontSize: 50 }}>クリック</Text></TouchableOpacity> */}
+
+      <Button title="クリック" onPress={() => onPress()}/>
 
       <PanGestureHandler onGestureEvent={gestureHander}>
         <Animated.View
         style={[
           {
-            top: dimentions.height,
             position: 'absolute',
             left: 0,
             right: 0,
             bottom: 0,
+            top: dimentions.height,
             backgroundColor: 'gray',
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
