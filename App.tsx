@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { Dimensions, FlatList, StyleSheet, Text, View ,Image, ListRenderItemInfo, NativeSyntheticEvent, NativeScrollEvent, TouchableOpacity} from 'react-native';
+import { findNodeHandle, Dimensions, FlatList, StyleSheet, Text, View ,Image, ListRenderItemInfo, NativeSyntheticEvent, NativeScrollEvent, TouchableOpacity, ScrollView} from 'react-native';
 import { Modalize } from 'react-native-modalize';
 
 export default function App() {
@@ -8,11 +8,17 @@ export default function App() {
   const ITEM_SIZE = (Dimensions.get('window').width * 345) / 375;
   const ITEM_PADDING = (Dimensions.get('window').width * 15) / 375;
   const [progress, setProgress] = React.useState(0);
+
+  const refView = React.useRef<View>(null);
+  const refScrollView = React.useRef<ScrollView>(null);
   const ref = React.useRef<FlatList>(null);
 
     const _renderItem = (item: ListRenderItemInfo<any>) => {
     return (
-      <View style={styles.cardItemContainer}>
+      <View style={{...styles.cardItemContainer}} 
+        pointerEvents="box-none"
+        onTouchStart={()=>console.log("RENDER")}
+        >
         
         <Modalize
           // ref={modalizeRef}
@@ -21,8 +27,8 @@ export default function App() {
           alwaysOpen={(Dimensions.get('window').height * 180) / 812}
           disableScrollIfPossible={true}
           handlePosition="outside"
-          rootStyle={{backgroundColor: 'green'}}
-          childrenStyle={{height:100,backgroundColor: 'yellow'}}
+          rootStyle={{backgroundColor: 'green', marginTop: 500}}
+          childrenStyle={{height:100, backgroundColor: 'yellow'}}
           overlayStyle={{backgroundColor: 'blue'}}
           modalStyle={styles.modalStyle}
           withOverlay={false}
@@ -40,6 +46,48 @@ export default function App() {
       setProgress(index);
     }
   };
+
+  return(
+    <View style={{...styles.container, position: "relative"}} 
+      ref={refView}
+      onStartShouldSetResponderCapture={(e)=>{
+        console.log("r", findNodeHandle(refView.current), e.nativeEvent.target, findNodeHandle(refScrollView.current))
+        return false;
+      }}
+      onTouchStart={()=>console.log("WOW")}
+    >
+      {/* <View style={{
+        position: "absolute",
+        height: Dimensions.get("window").height,
+        width: Dimensions.get("window").width,
+        backgroundColor: "gold"
+      }} onTouchStart={()=>console.log("Success", Date.now())}></View> */}
+      <ScrollView 
+        
+        horizontal={true} 
+        // style={{maxHeight: 300, overflow: "visible"}}
+        onTouchStart={()=>console.log("OnTouchScrollView", Date.now())}
+        ref={refScrollView}
+        >
+        {_renderItem(null as any)}
+        {/* <View style={{position: "absolute", height: "100%", width: "100%", backgroundColor: "white", zIndex: 0}}/> */}
+        {/* <Modalize
+          // ref={modalizeRef}
+          modalHeight={(Dimensions.get('window').height * 650) / 812}
+          handleStyle={styles.handleStyle}
+          alwaysOpen={(Dimensions.get('window').height * 180) / 812}
+          disableScrollIfPossible={true}
+          handlePosition="outside"
+          rootStyle={{backgroundColor: 'green'}}
+          childrenStyle={{height:100,backgroundColor: 'yellow'}}
+          overlayStyle={{backgroundColor: 'blue'}}
+          modalStyle={styles.modalStyle}
+          //withOverlay={false}
+        >
+        </Modalize> */}
+      </ScrollView>
+    </View>
+  )
 
   return (
     <View style={styles.container}>
