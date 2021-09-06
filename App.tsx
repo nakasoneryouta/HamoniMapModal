@@ -35,7 +35,6 @@ const component: React.FC = () => {
 
   const [panX] = React.useState(new Animated.Value(0))
   const [panY] = React.useState(new Animated.Value(0))
-  const [coordinate ,setCoordinate] = React.useState<{latitude: number,longitude: number}>({latitude: LATITUDE,longitude: LONGITUDE})
   const [canMoveHorizontal, setCanMoveHorizontal] = React.useState(false)
   const flatListRef = React.useRef<FlatList>(null);
   const [region] = React.useState(new AnimatedRegion({
@@ -198,55 +197,62 @@ const component: React.FC = () => {
       };
   }
 
-  // const onPanYChange = ({ value }) => {
-    
-  //   const shouldBeMovable = Math.abs(value) < 2;
-  //   if (shouldBeMovable !== canMoveHorizontal) {
-  //     setCanMoveHorizontal(shouldBeMovable)
-  //     if (!shouldBeMovable) {
-  //       setCoordinate(markers[index])
-  //       region.stopAnimation();
-  //       region
-  //         .timing({
-  //           latitude: scrollY.interpolate({
-  //             inputRange: [0, BREAKPOINT1],
-  //             outputRange: [
-  //               coordinate.latitude,
-  //               coordinate.latitude - LATITUDE_DELTA * 0.5 * 0.375,
-  //             ],
-  //             extrapolate: 'clamp',
-  //           }),
-  //           latitudeDelta: scrollY.interpolate({
-  //             inputRange: [0, BREAKPOINT1],
-  //             outputRange: [LATITUDE_DELTA, LATITUDE_DELTA * 0.5],
-  //             extrapolate: 'clamp',
-  //           }),
-  //           longitudeDelta: scrollY.interpolate({
-  //             inputRange: [0, BREAKPOINT1],
-  //             outputRange: [LONGITUDE_DELTA, LONGITUDE_DELTA * 0.5],
-  //             extrapolate: 'clamp',
-  //           }),
-  //           duration: 0,
-  //         })
-  //         .start();
-  //     } else {
-  //       region.stopAnimation();
-  //       region
-  //         .timing({
-  //           latitude: scrollX.interpolate({
-  //             inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //             outputRange: markers.map(m => m.coordinate.latitude),
-  //           }),
-  //           longitude: scrollX.interpolate({
-  //             inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //             outputRange: markers.map(m => m.coordinate.longitude),
-  //           }),
-  //           duration: 0,
-  //         })
-  //         .start();
-  //     }
-  //   }
-  // };
+  const onPanYChange = ({ value }) => {
+    // const {
+    //   canMoveHorizontal,
+    //   region,
+    //   scrollY,
+    //   scrollX,
+    //   markers,
+    //   index,
+    // } = this.state;
+    const shouldBeMovable = Math.abs(value) < 2;
+    if (shouldBeMovable !== canMoveHorizontal) {
+      setCanMoveHorizontal(shouldBeMovable)
+      if (!shouldBeMovable) {
+        const { coordinate } = markers[index];
+        region.stopAnimation();
+        region
+          .timing({
+            latitude: scrollY.interpolate({
+              inputRange: [0, BREAKPOINT1],
+              outputRange: [
+                coordinate.latitude,
+                coordinate.latitude - LATITUDE_DELTA * 0.5 * 0.375,
+              ],
+              extrapolate: 'clamp',
+            }),
+            latitudeDelta: scrollY.interpolate({
+              inputRange: [0, BREAKPOINT1],
+              outputRange: [LATITUDE_DELTA, LATITUDE_DELTA * 0.5],
+              extrapolate: 'clamp',
+            }),
+            longitudeDelta: scrollY.interpolate({
+              inputRange: [0, BREAKPOINT1],
+              outputRange: [LONGITUDE_DELTA, LONGITUDE_DELTA * 0.5],
+              extrapolate: 'clamp',
+            }),
+            duration: 0,
+          })
+          .start();
+      } else {
+        region.stopAnimation();
+        region
+          .timing({
+            latitude: scrollX.interpolate({
+              inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+              outputRange: markers.map(m => m.coordinate.latitude),
+            }),
+            longitude: scrollX.interpolate({
+              inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+              outputRange: markers.map(m => m.coordinate.longitude),
+            }),
+            duration: 0,
+          })
+          .start();
+      }
+    }
+  };
 
   const onStartShouldSetPanResponder = (event: any) => {
     // we only want to move the view if they are starting the gesture on top
@@ -278,26 +284,27 @@ const component: React.FC = () => {
     }
   };
 
-  // React.useEffect(() => {
+  React.useEffect(() => {
+    // const { region, panX, panY, scrollX, markers } = this.state;
 
-  //   panX.addListener(onPanXChange);
-  //   panY.addListener(onPanYChange);
+    panX.addListener(onPanXChange);
+    panY.addListener(onPanYChange);
 
-  //   region.stopAnimation();
-  //   region
-  //     .timing({
-  //       latitude: scrollX.interpolate({
-  //         inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //         outputRange: markers.map(m => m.coordinate.latitude),
-  //       }),
-  //       longitude: scrollX.interpolate({
-  //         inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //         outputRange: markers.map(m => m.coordinate.longitude),
-  //       }),
-  //       duration: 0,
-  //     })
-  //     .start();
-  // }, [])
+    region.stopAnimation();
+    region
+      .timing({
+        latitude: scrollX.interpolate({
+          inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+          outputRange: markers.map(m => m.coordinate.latitude),
+        }),
+        longitude: scrollX.interpolate({
+          inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+          outputRange: markers.map(m => m.coordinate.longitude),
+        }),
+        duration: 0,
+      })
+      .start();
+  }, [])
 
   
   // const _renderItem = () => {
