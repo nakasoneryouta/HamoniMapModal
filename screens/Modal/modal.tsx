@@ -1,21 +1,13 @@
 import React from 'react';
-import { View, Text, Animated, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, Dimensions ,FlatList} from 'react-native';
-import PanController from './screens/PanController/PanController';
+import { View, Text, Animated, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import PanController from '../PanController/PanController';
 import {
   Animated as AnimatedMap,
   AnimatedRegion,
   Marker,
 } from 'react-native-maps';
 
-
-type MARKER = {
-  id: number, amount: number, coordinate: {
-  latitude: number,longitude: number,
-  }
-}
-
-const ITEM_SIZE = (Dimensions.get('screen').width * 345) / 375;
-const ASPECT_RATIO = Dimensions.get('window').width / Dimensions.get('window').height;
+const ASPECT_RATIO = screen.width / screen.height;
 const LATITUDE = 37.78825;
 const LONGITUDE = -122.4324;
 const LATITUDE_DELTA = 0.0922;
@@ -23,21 +15,24 @@ const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 const ITEM_SPACING = 10;
 const ITEM_PREVIEW = 10;
-const ITEM_WIDTH = Dimensions.get('screen').width - 2 * ITEM_SPACING - 2 * ITEM_PREVIEW;
+const ITEM_WIDTH = screen.width - 2 * ITEM_SPACING - 2 * ITEM_PREVIEW;
 const SNAP_WIDTH = ITEM_WIDTH + ITEM_SPACING;
 const ITEM_PREVIEW_HEIGHT = 150;
-const SCALE_END = Dimensions.get('screen').width / ITEM_WIDTH;
+const SCALE_END = screen.width / ITEM_WIDTH;
 const BREAKPOINT1 = 246;
 const BREAKPOINT2 = 350;
 const ONE = new Animated.Value(1);
+
+
+type MARKER = {
+  id: number, amount: number, coordinate: {
+  latitude: number,longitude: number,
+}}
 
 const component: React.FC = () => {
 
   const [panX] = React.useState(new Animated.Value(0))
   const [panY] = React.useState(new Animated.Value(0))
-  const [coordinate ,setCoordinate] = React.useState<{latitude: number,longitude: number}>({latitude: LATITUDE,longitude: LONGITUDE})
-  const [canMoveHorizontal, setCanMoveHorizontal] = React.useState(false)
-  const flatListRef = React.useRef<FlatList>(null);
   const [region] = React.useState(new AnimatedRegion({
         latitude: LATITUDE,
         longitude: LONGITUDE,
@@ -198,55 +193,62 @@ const component: React.FC = () => {
       };
   }
 
-  // const onPanYChange = ({ value }) => {
-    
-  //   const shouldBeMovable = Math.abs(value) < 2;
-  //   if (shouldBeMovable !== canMoveHorizontal) {
-  //     setCanMoveHorizontal(shouldBeMovable)
-  //     if (!shouldBeMovable) {
-  //       setCoordinate(markers[index])
-  //       region.stopAnimation();
-  //       region
-  //         .timing({
-  //           latitude: scrollY.interpolate({
-  //             inputRange: [0, BREAKPOINT1],
-  //             outputRange: [
-  //               coordinate.latitude,
-  //               coordinate.latitude - LATITUDE_DELTA * 0.5 * 0.375,
-  //             ],
-  //             extrapolate: 'clamp',
-  //           }),
-  //           latitudeDelta: scrollY.interpolate({
-  //             inputRange: [0, BREAKPOINT1],
-  //             outputRange: [LATITUDE_DELTA, LATITUDE_DELTA * 0.5],
-  //             extrapolate: 'clamp',
-  //           }),
-  //           longitudeDelta: scrollY.interpolate({
-  //             inputRange: [0, BREAKPOINT1],
-  //             outputRange: [LONGITUDE_DELTA, LONGITUDE_DELTA * 0.5],
-  //             extrapolate: 'clamp',
-  //           }),
-  //           duration: 0,
-  //         })
-  //         .start();
-  //     } else {
-  //       region.stopAnimation();
-  //       region
-  //         .timing({
-  //           latitude: scrollX.interpolate({
-  //             inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //             outputRange: markers.map(m => m.coordinate.latitude),
-  //           }),
-  //           longitude: scrollX.interpolate({
-  //             inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //             outputRange: markers.map(m => m.coordinate.longitude),
-  //           }),
-  //           duration: 0,
-  //         })
-  //         .start();
-  //     }
-  //   }
-  // };
+  const onPanYChange = ({ value }) => {
+    const {
+      canMoveHorizontal,
+      region,
+      scrollY,
+      scrollX,
+      markers,
+      index,
+    } = this.state;
+    const shouldBeMovable = Math.abs(value) < 2;
+    if (shouldBeMovable !== canMoveHorizontal) {
+      this.setState({ canMoveHorizontal: shouldBeMovable });
+      if (!shouldBeMovable) {
+        const { coordinate } = markers[index];
+        region.stopAnimation();
+        region
+          .timing({
+            latitude: scrollY.interpolate({
+              inputRange: [0, BREAKPOINT1],
+              outputRange: [
+                coordinate.latitude,
+                coordinate.latitude - LATITUDE_DELTA * 0.5 * 0.375,
+              ],
+              extrapolate: 'clamp',
+            }),
+            latitudeDelta: scrollY.interpolate({
+              inputRange: [0, BREAKPOINT1],
+              outputRange: [LATITUDE_DELTA, LATITUDE_DELTA * 0.5],
+              extrapolate: 'clamp',
+            }),
+            longitudeDelta: scrollY.interpolate({
+              inputRange: [0, BREAKPOINT1],
+              outputRange: [LONGITUDE_DELTA, LONGITUDE_DELTA * 0.5],
+              extrapolate: 'clamp',
+            }),
+            duration: 0,
+          })
+          .start();
+      } else {
+        region.stopAnimation();
+        region
+          .timing({
+            latitude: scrollX.interpolate({
+              inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+              outputRange: markers.map(m => m.coordinate.latitude),
+            }),
+            longitude: scrollX.interpolate({
+              inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+              outputRange: markers.map(m => m.coordinate.longitude),
+            }),
+            duration: 0,
+          })
+          .start();
+      }
+    }
+  };
 
   const onStartShouldSetPanResponder = (event: any) => {
     // we only want to move the view if they are starting the gesture on top
@@ -254,15 +256,15 @@ const component: React.FC = () => {
     // false, the gesture should get passed to the map view appropriately.
     const { pageY } =event.nativeEvent;
     const topOfMainWindow = ITEM_PREVIEW_HEIGHT + panY.__getValue();
-    const topOfTap = Dimensions.get('screen').height - pageY;
+    const topOfTap = screen.height - pageY;
 
     return topOfTap < topOfMainWindow;
   };
 
-    const  onMoveShouldSetPanResponder = (event: any) => {
-    const { pageY } = event.nativeEvent;
+    const = onMoveShouldSetPanResponder = (event: any) => {
+    const { pageY } = e.nativeEvent;
     const topOfMainWindow = ITEM_PREVIEW_HEIGHT + panY.__getValue();
-    const topOfTap = Dimensions.get('screen').height - pageY;
+    const topOfTap = screen.height - pageY;
 
     return topOfTap < topOfMainWindow;
   };
@@ -278,73 +280,37 @@ const component: React.FC = () => {
     }
   };
 
-  // React.useEffect(() => {
+  React.useEffect(() => {
+    // const { region, panX, panY, scrollX, markers } = this.state;
 
-  //   panX.addListener(onPanXChange);
-  //   panY.addListener(onPanYChange);
+    panX.addListener(onPanXChange);
+    panY.addListener(onPanYChange);
 
-  //   region.stopAnimation();
-  //   region
-  //     .timing({
-  //       latitude: scrollX.interpolate({
-  //         inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //         outputRange: markers.map(m => m.coordinate.latitude),
-  //       }),
-  //       longitude: scrollX.interpolate({
-  //         inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-  //         outputRange: markers.map(m => m.coordinate.longitude),
-  //       }),
-  //       duration: 0,
-  //     })
-  //     .start();
-  // }, [])
-
-  
-  // const _renderItem = () => {
-  //   return (
-  //     <PanController
-  //         style={styles.container}
-  //         vertical
-  //         xMode="snap"
-  //         snapSpacingX={SNAP_WIDTH}
-  //         yBounds={[-1 * Dimensions.get('screen').height, 0]}
-  //         xBounds={[-Dimensions.get('screen').width * (markers.length - 1), 0]}
-  //         panY={panY}
-  //         panX={panX}
-  //         onStartShouldSetPanResponder={onStartShouldSetPanResponder}
-  //         onMoveShouldSetPanResponder={onMoveShouldSetPanResponder}
-  //       >
-  //         <View style={styles.itemContainer}>
-  //           {markers.map((marker, i) => {
-  //             const { translateY, translateX, scale, opacity } = animations[i];
-
-  //             return (
-  //               <Animated.View
-  //                 key={marker.id}
-  //                 style={[
-  //                   styles.item,
-  //                   {
-  //                     opacity,
-  //                     transform: [{ translateY }, { translateX }, { scale }],
-  //                   },
-  //                 ]}
-  //               />
-  //             );
-  //           })}
-  //         </View>
-  //       </PanController>
-  //   )
-  // }
+    region.stopAnimation();
+    region
+      .timing({
+        latitude: scrollX.interpolate({
+          inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+          outputRange: markers.map(m => m.coordinate.latitude),
+        }),
+        longitude: scrollX.interpolate({
+          inputRange: markers.map((m, i) => i * SNAP_WIDTH),
+          outputRange: markers.map(m => m.coordinate.longitude),
+        }),
+        duration: 0,
+      })
+      .start();
+  },[])
 
 	return (
-    <View style={styles.container}>
-      <PanController
+      <View style={styles.container}>
+        <PanController
           style={styles.container}
           vertical
           xMode="snap"
           snapSpacingX={SNAP_WIDTH}
-          yBounds={[-1 * Dimensions.get('screen').height, 0]}
-          xBounds={[-Dimensions.get('screen').width * (markers.length - 1), 0]}
+          yBounds={[-1 * screen.height, 0]}
+          xBounds={[-screen.width * (markers.length - 1), 0]}
           panY={panY}
           panX={panX}
           onStartShouldSetPanResponder={onStartShouldSetPanResponder}
@@ -369,21 +335,20 @@ const component: React.FC = () => {
             })}
           </View>
         </PanController>
-
       </View>
 	);
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex:1,
+    ...StyleSheet.absoluteFillObject,
   },
   itemContainer: {
     backgroundColor: 'transparent',
     flexDirection: 'row',
     paddingHorizontal: ITEM_SPACING / 2 + ITEM_PREVIEW,
     position: 'absolute',
-    paddingTop: Dimensions.get('screen').height - ITEM_PREVIEW_HEIGHT - 64,
+    paddingTop: screen.height - ITEM_PREVIEW_HEIGHT - 64,
   },
   map: {
     backgroundColor: 'transparent',
@@ -391,7 +356,7 @@ const styles = StyleSheet.create({
   },
   item: {
     width: ITEM_WIDTH,
-    height: Dimensions.get('screen').height + 2 * ITEM_PREVIEW_HEIGHT,
+    height: screen.height + 2 * ITEM_PREVIEW_HEIGHT,
     backgroundColor: 'red',
     marginHorizontal: ITEM_SPACING / 2,
     overflow: 'hidden',
