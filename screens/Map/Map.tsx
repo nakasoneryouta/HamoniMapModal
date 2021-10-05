@@ -6,9 +6,10 @@ import {
   Animated as AnimatedMap,
   AnimatedRegion,
   Marker,
+  LatLng,
 } from 'react-native-maps';
-import PanController from './PanController';
-import PriceMarker from './AnimatedPriceMarker';
+import PanController from '../PanController/PanController';
+import PriceMarker from '../AnimatedPriceMarker/AnimatedPriceMarker';
 
 const screen = Dimensions.get('window');
 
@@ -28,7 +29,7 @@ const BREAKPOINT1 = 246;
 const BREAKPOINT2 = 350;
 const ONE = new Animated.Value(1);
 
-function getMarkerState(panX, panY, scrollY, i) {
+function getMarkerState(panX: Animated.Value, panY: Animated.Animated, scrollY: Animated.AnimatedInterpolation, i: number) {
   const xLeft = -SNAP_WIDTH * i + SNAP_WIDTH / 2;
   const xRight = -SNAP_WIDTH * i - SNAP_WIDTH / 2;
   const xPos = -SNAP_WIDTH * i;
@@ -130,6 +131,7 @@ function getMarkerState(panX, panY, scrollY, i) {
 }
 
 class AnimatedViews extends React.Component {
+  static propTypes: { provider: any; };
   constructor(props) {
     super(props);
 
@@ -219,19 +221,19 @@ class AnimatedViews extends React.Component {
     region
       .timing({
         latitude: scrollX.interpolate({
-          inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-          outputRange: markers.map(m => m.coordinate.latitude),
+          inputRange: markers.map((m: any, i: number) => i * SNAP_WIDTH),
+          outputRange: markers.map((m: { coordinate: { latitude: any; }; }) => m.coordinate.latitude),
         }),
         longitude: scrollX.interpolate({
-          inputRange: markers.map((m, i) => i * SNAP_WIDTH),
-          outputRange: markers.map(m => m.coordinate.longitude),
+          inputRange: markers.map((m: any, i: number) => i * SNAP_WIDTH),
+          outputRange: markers.map((m: { coordinate: { longitude: any; }; }) => m.coordinate.longitude),
         }),
         duration: 0,
       })
       .start();
   }
 
-  onStartShouldSetPanResponder = e => {
+  onStartShouldSetPanResponder = (e: { nativeEvent: { pageY: any; }; }) => {
     // we only want to move the view if they are starting the gesture on top
     // of the view, so this calculates that and returns true if so. If we return
     // false, the gesture should get passed to the map view appropriately.
@@ -243,7 +245,7 @@ class AnimatedViews extends React.Component {
     return topOfTap < topOfMainWindow;
   };
 
-  onMoveShouldSetPanResponder = e => {
+  onMoveShouldSetPanResponder = (e: { nativeEvent: { pageY: any; }; }) => {
     const { panY } = this.state;
     const { pageY } = e.nativeEvent;
     const topOfMainWindow = ITEM_PREVIEW_HEIGHT + panY.__getValue();
@@ -352,7 +354,7 @@ class AnimatedViews extends React.Component {
             region={region}
             onRegionChange={this.onRegionChange}
           >
-            {markers.map((marker, i) => {
+            {markers.map((marker: { id: React.Key | null | undefined; coordinate: AnimatedRegion | LatLng; amount: any; }, i: string | number) => {
               const { selected, markerOpacity, markerScale } = animations[i];
 
               return (
@@ -370,7 +372,7 @@ class AnimatedViews extends React.Component {
             })}
           </AnimatedMap>
           <View style={styles.itemContainer}>
-            {markers.map((marker, i) => {
+            {markers.map((marker: { id: string | number | null | undefined; }, i:number) => {
               const { translateY, translateX, scale, opacity } = animations[i];
 
               return (
